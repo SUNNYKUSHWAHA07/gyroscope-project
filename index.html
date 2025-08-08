@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+   <link
+    href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css"
+    rel="stylesheet"
+/>
+      <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+      <style>
+        #card-with-arrow {
+            -webkit-mask-image: url(#hole-mask);
+            mask-image: url(#hole-mask);
+            -webkit-mask-size: 100% 100%;
+            mask-size: 100% 100%;
+        }
+    </style>
+</head>
+<body class="overflow-hidden relative flex justify-center items-center h-screen ">
+    <div id="main" class="h-screen w-screen  flex justify-center items-center bg-cover bg-center bg-[url('forest.jpg')]">
+        <div id="card-with-arrow" class="card w-full h-[55vh] backdrop-blur-lg bg-zinc-100/40 rounded-2xl overflow-hidden 
+        ">
+        <img class="w-full object-cover h-full" src="./logo-removebg-preview.png" alt="">
+        <div  class="text-black-800 absolute bottom-[2vh] px-3 left-0">
+        <i class="ri-add-line text-2xl"></i>
+         <h1 class="text-xl leading-none font-bold">Frido Barefoot Sock <br> Shoe Pro</h1>
+        </div>
+
+        </div>
+    </div>
+      <canvas class="block absolute bg-transparent border-0 outline-none left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2" id="canvas"></canvas>
+    
+     <button class="px-[30px] absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 py-[15px] text-[1.rem] cursor-pointer z-10 border border-white bg-black text-white rounded" id="startButton">
+        start
+    </button>
+<script src="https://cdn.jsdelivr.net/npm/matter-js"></script>
+    <script src="script.js"></script>
+  <svg width="0" height="0" style="position:absolute;">
+        <defs>
+            <mask id="hole-mask" maskContentUnits="objectBoundingBox">
+                <rect x="0" y="0" width="1" height="1" fill="white" />
+               <path  transform="translate(0.8, 0.78) scale(0.2)" d="M0 0.4 L0.55 0.4 L0.45 0.05 L0.55 0 L1 0.5 L0.55 1 L0.45 0.95 L0.55 0.6 L0 0.6 Z" fill="black" />
+            </mask> 
+        </defs>
+    </svg>
+
+ 
+
+
+</body>
+</html>
