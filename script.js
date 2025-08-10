@@ -141,70 +141,156 @@ let lastTiltX = 0;
 let lastTiltY = 0;
 let lastAlpha = 0;
 let stillTime = 0;
-  function handleOrientation(event) {
-    const now = Date.now();
-    if (now - lastTiltTime < 100) return; 
-    lastTiltTime = now;
 
+let stableMode = false;
 
-    let tiltX = event.gamma || 0;
-    let tiltY = event.beta || 0;
-   
-    const rotationZ = event.alpha || 0; // Device rotation around Z-axis
+function handleOrientation(event) {
+  const now = Date.now();
+  if (now - lastTiltTime < 100) return;
+  lastTiltTime = now;
 
+  let tiltX = event.gamma || 0;
+  let tiltY = event.beta || 0;
+  const rotationZ = event.alpha || 0;
 
-      // Kitna change hua — threshold 0.5 degree rakha hai
   const diffX = Math.abs(tiltX - lastTiltX);
   const diffY = Math.abs(tiltY - lastTiltY);
   const diffA = Math.abs(rotationZ - lastAlpha);
- 
-   const changeThreshold = 0.8;
 
+  const changeThreshold = 0.8;
 
-     if (diffX < changeThreshold && diffY < changeThreshold && diffA < changeThreshold) {
+  if (diffX < changeThreshold && diffY < changeThreshold && diffA < changeThreshold) {
     stillTime++;
-    // Agar 5 frames se kam change ho raha to animation stop
     if (stillTime > maxStillFrames) {
-      return; // No tilt force, sirf gravity ka effect hoga
+      stableMode = true; // Device is stable → settle balls
     }
   } else {
-    stillTime = 0; // Movement detect ho gayi, reset counter
+    stillTime = 0;
+    stableMode = false; // Movement detected → normal bouncing
   }
 
-
-  // Update last values
   lastTiltX = tiltX;
   lastTiltY = tiltY;
   lastAlpha = rotationZ;
 
+  // Clamp small jitters
+  const jitterThreshold = 2;
+  if (Math.abs(tiltX) < jitterThreshold) tiltX = 0;
+  if (Math.abs(tiltY) < jitterThreshold) tiltY = 0;
 
- 
+  const gravityStrength = 1;
+  world.gravity.x = clamp(tiltX / 90, -1, 1) * gravityStrength;
+  world.gravity.y = clamp(tiltY / 90, -1, 1) * gravityStrength;
+
+  if (!stableMode) {
+    // Apply bouncing impulse only when moving
     const sensitivityDivisor = 60;
-    const forceMag = 0.005; // Impulse strength; increase for stronger bounce
+    const forceMag = 0.005;
 
+    balls.forEach(ball => {
+      const fx = clamp(forceMag * (tiltX / sensitivityDivisor), -forceMag, forceMag);
+      const rawFy = forceMag * (-tiltY / sensitivityDivisor);
+      const fy = clamp(Math.max(rawFy, 0), 0, forceMag);
+      Body.applyForce(ball, ball.position, { x: fx, y: fy });
+    });
+  }
+}
 
-    const threshold = 5; // degree
-  if (Math.abs(tiltX) < threshold) tiltX = 0;
-  if (Math.abs(tiltY) < threshold) tiltY = 0;
-
-
+// Smoothly settle when phone is still
+Events.on(engine, "beforeUpdate", function () {
+  const maxSpeed = stableMode ? 3 : 15; // slow when settling
+  const damping = stableMode ? 0.98 : 1; // slow decay when settling
 
   balls.forEach(ball => {
-  const fx = clamp(forceMag * (tiltX / sensitivityDivisor), -forceMag, forceMag);
-  // Prevent upward force (fy < 0)
-  const rawFy = forceMag * (-tiltY / sensitivityDivisor);
-  const fy = clamp(Math.max(rawFy, 0), 0, forceMag);
-  Body.applyForce(ball, ball.position, { x: fx, y: fy });
+    const speed = Math.sqrt(ball.velocity.x ** 2 + ball.velocity.y ** 2);
+    if (speed > maxSpeed) {
+      Body.setVelocity(ball, {
+        x: ball.velocity.x * (maxSpeed / speed),
+        y: ball.velocity.y * (maxSpeed / speed),
+      });
+    } else if (stableMode) {
+      Body.setVelocity(ball, {
+        x: ball.velocity.x * damping,
+        y: ball.velocity.y * damping,
+      });
+    }
+  });
 });
+
+//   function handleOrientation(event) {
+//     const now = Date.now();
+//     if (now - lastTiltTime < 100) return; 
+//     lastTiltTime = now;
+
+
+//     let tiltX = event.gamma || 0;
+//     let tiltY = event.beta || 0;
+   
+//     const rotationZ = event.alpha || 0; // Device rotation around Z-axis
+
+
+//       // Kitna change hua — threshold 0.5 degree rakha hai
+//   const diffX = Math.abs(tiltX - lastTiltX);
+//   const diffY = Math.abs(tiltY - lastTiltY);
+//   const diffA = Math.abs(rotationZ - lastAlpha);
+ 
+//    const changeThreshold = 0.8;
+
+
+//      if (diffX < changeThreshold && diffY < changeThreshold && diffA < changeThreshold) {
+//     stillTime++;
+//     // Agar 5 frames se kam change ho raha to animation stop
+//     if (stillTime > maxStillFrames) {
+//       return; // No tilt force, sirf gravity ka effect hoga
+//     }
+//   } else {
+//     stillTime = 0; // Movement detect ho gayi, reset counter
+//   }
+
+
+//   // Update last values
+//   lastTiltX = tiltX;
+//   lastTiltY = tiltY;
+//   lastAlpha = rotationZ;
+
+//     const jitterThreshold = 5;
+//   if (Math.abs(tiltX) < jitterThreshold) tiltX = 0;
+//   if (Math.abs(tiltY) < jitterThreshold) tiltY = 0;
+
+//   // Map tilt angles to normalized gravity vector
+//   // Gravity strength can be adjusted to tune the speed and feel
+//   const gravityStrength = 0.4;
+
+//   world.gravity.x = clamp(tiltX / 90, -1, 1) * gravityStrength;
+//   world.gravity.y = clamp(tiltY / 90, -1, 1) * gravityStrength;
+
+ 
+//     const sensitivityDivisor = 60;
+//     const forceMag = 0.005; // Impulse strength; increase for stronger bounce
+
+
+//     const threshold = 5; // degree
+//   if (Math.abs(tiltX) < threshold) tiltX = 0;
+//   if (Math.abs(tiltY) < threshold) tiltY = 0;
+
+
+
+//   balls.forEach(ball => {
+//   const fx = clamp(forceMag * (tiltX / sensitivityDivisor), -forceMag, forceMag);
+//   // Prevent upward force (fy < 0)
+//   const rawFy = forceMag * (-tiltY / sensitivityDivisor);
+//   const fy = clamp(Math.max(rawFy, 0), 0, forceMag);
+//   Body.applyForce(ball, ball.position, { x: fx, y: fy });
+// });
 
 
 
  
-  }
+//   }
 
 
   Events.on(engine, "beforeUpdate", function() {
-    const maxSpeed = 15; // High max speed for superballs
+    const maxSpeed = 10; // High max speed for superballs
     balls.forEach(ball => {
       const speed = Math.sqrt(ball.velocity.x ** 2 + ball.velocity.y ** 2);
       if (speed > maxSpeed) {
