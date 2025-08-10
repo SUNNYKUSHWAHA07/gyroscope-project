@@ -237,11 +237,11 @@ let lastTiltY = 0;
 let lastAlpha = 0;
 let stillTime = 0;
   function handleOrientation(event) {
-    // const now = Date.now();
-    // if (now - lastTiltTime < 400) return; // 400ms cooldown
+    const now = Date.now();
+    if (now - lastTiltTime < 200) return; // 400ms cooldown
   
     
-    // lastTiltTime = now;
+    lastTiltTime = now;
 
     let tiltX = event.gamma || 0;
     let tiltY = event.beta || 0;
@@ -327,7 +327,7 @@ let stillTime = 0;
 
   // Speed limiter to prevent unrealistic velocities
   Events.on(engine, "beforeUpdate", function() {
-    const maxSpeed = 10; // High max speed for superballs
+    const maxSpeed = 15; // High max speed for superballs
     balls.forEach(ball => {
       const speed = Math.sqrt(ball.velocity.x ** 2 + ball.velocity.y ** 2);
       if (speed > maxSpeed) {
