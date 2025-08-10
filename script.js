@@ -237,13 +237,14 @@ let lastTiltY = 0;
 let lastAlpha = 0;
 let stillTime = 0;
   function handleOrientation(event) {
-    const now = Date.now();
-    if (now - lastTiltTime < 400) return; // 400ms cooldown
-    lastTiltTime = now;
+    // const now = Date.now();
+    // if (now - lastTiltTime < 400) return; // 400ms cooldown
+  
+    
+    // lastTiltTime = now;
 
-    let tiltX = Math.floor(event.gamma) || 0;
-    let tiltY = Math.floor(event.beta) || 0;
-    console.log(tiltX,tiltY);
+    let tiltX = event.gamma || 0;
+    let tiltY = event.beta || 0;
     
     const rotationZ = event.alpha || 0; // Device rotation around Z-axis
 
@@ -251,13 +252,13 @@ let stillTime = 0;
   const diffX = Math.abs(tiltX - lastTiltX);
   const diffY = Math.abs(tiltY - lastTiltY);
   const diffA = Math.abs(rotationZ - lastAlpha);
-
-   const changeThreshold = 1;
+ 
+   const changeThreshold = 0.5;
 
      if (diffX < changeThreshold && diffY < changeThreshold && diffA < changeThreshold) {
     stillTime++;
     // Agar 5 frames se kam change ho raha to animation stop
-    if (stillTime > 1) {
+    if (stillTime > 5) {
       return; // No tilt force, sirf gravity ka effect hoga
     }
   } else {
@@ -298,11 +299,21 @@ let stillTime = 0;
   if (Math.abs(tiltX) < threshold) tiltX = 0;
   if (Math.abs(tiltY) < threshold) tiltY = 0;
 
+
   balls.forEach(ball => {
-    const fx = clamp(forceMag * (tiltX / sensitivityDivisor), -forceMag, forceMag);
-    const fy = clamp(forceMag * (-tiltY / sensitivityDivisor), -forceMag, forceMag);
-    Body.applyForce(ball, ball.position, { x: fx, y: fy });
-  });
+  const fx = clamp(forceMag * (tiltX / sensitivityDivisor), -forceMag, forceMag);
+  // Prevent upward force (fy < 0)
+  const rawFy = forceMag * (-tiltY / sensitivityDivisor);
+  const fy = clamp(Math.max(rawFy, 0), 0, forceMag);
+  Body.applyForce(ball, ball.position, { x: fx, y: fy });
+});
+
+
+  // balls.forEach(ball => {
+  //   const fx = clamp(forceMag * (tiltX / sensitivityDivisor), -forceMag, forceMag);
+  //   const fy = clamp(forceMag * (-tiltY / sensitivityDivisor), -forceMag, forceMag);
+  //   Body.applyForce(ball, ball.position, { x: fx, y: fy });
+  // });
 
 
     // balls.forEach(ball => {
@@ -316,7 +327,7 @@ let stillTime = 0;
 
   // Speed limiter to prevent unrealistic velocities
   Events.on(engine, "beforeUpdate", function() {
-    const maxSpeed = 12; // High max speed for superballs
+    const maxSpeed = 10; // High max speed for superballs
     balls.forEach(ball => {
       const speed = Math.sqrt(ball.velocity.x ** 2 + ball.velocity.y ** 2);
       if (speed > maxSpeed) {
