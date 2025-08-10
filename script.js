@@ -18,7 +18,7 @@ document.getElementById('canvas').height = height;
 // --- Engine Setup ---
 const engine = Engine.create();
 const world = engine.world;
-world.gravity.y = 0.1;
+world.gravity.y = 0.01;
 
 
 // Set initial gravity to zero; it will be controlled by the gyroscope
